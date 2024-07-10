@@ -1,0 +1,40 @@
+Como montar RPI OS imagem no seu Linux x86 ou x86_64 host:
+
+Download a imagem mais recente do RPI OS:
+    
+    https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-07-04/2024-07-04-raspios-bookworm-arm64.img.xz
+    
+    cp <para-onde-voce-fez-download>
+    
+Decomprimir o arquivo:
+    unxz 2024-07-04-raspios-bookworm-arm64.img.xz
+    
+Descubra qual setor o FS se inicia:
+    fdisk -l 2024-07-04-raspios-bookworm-arm64.img
+   
+resultado:   
+  Device                                                       Boot   Start      End  Sectors  Size Id Type
+  /home/mv/Downloads/2024-07-04-raspios-bookworm-arm64.img1         8192  1056767  1048576  512M  c W95 FAT32 (LBA)
+  /home/mv/Downloads/2024-07-04-raspios-bookworm-arm64.img2      1056768 11878399 10821632  5.2G 83 Linux
+
+desta forma, o roofs que queremos inicia no setor 1056768. Cada setor tem 512 bytes. Assim, o offset em bytes do inicio do FS sera 512 * 1056768:
+  offset em bytes do inicio do roofs: 541065216
+
+Vamos criar um diretorio para monta-lo:
+  sudo mkdir /mnt/myloop-dev-image
+
+Finalmente, vamos montar o loop device:
+  sudo mount -o loop,offset=541065216 2024-07-04-raspios-bookworm-arm64.img /mnt/myloop-dev-image
+
+Se quiser, fique "dono" deste diretorio para nao precisar de usar sudo para efetuar copias e etc:
+  sudo chown -R $USER:$USER /mnt/myloop-dev-image
+  
+Faca as copias:
+  mkdir ~/arm-files
+  cp -r /mnt/myloop-dev-image/usr ~/arm-files/
+  cp -r /mnt/myloop-dev-image/lib ~/arm-files/
+  
+  nota: se vc nao se tornou dono voce tera que usar sudo antes do "cp"
+
+Uma vez copiados vc nao precisara mais deste loop device:
+  sudo umount /mnt/myloop-dev-image
